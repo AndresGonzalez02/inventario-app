@@ -306,15 +306,31 @@ function clearForm() {
 function saveProduct(event) {
     event.preventDefault();
     
-    const formData = new FormData(document.getElementById('productForm'));
+    // Get form data
+    const name = document.getElementById('productName').value.trim();
+    const reference = document.getElementById('productReference').value.trim();
+    const brand = document.getElementById('productBrand').value.trim();
+    const quantity = parseInt(document.getElementById('productQuantity').value);
+    const price = parseFloat(document.getElementById('productPrice').value);
     const imageFile = document.getElementById('productImage').files[0];
     
+    // Validate required fields
+    if (!name || !reference || !brand || isNaN(quantity) || isNaN(price)) {
+        showNotification('Por favor completa todos los campos obligatorios', 'error');
+        return;
+    }
+    
+    if (quantity < 0 || price < 0) {
+        showNotification('Cantidad y precio deben ser números positivos', 'error');
+        return;
+    }
+    
     const productData = {
-        name: formData.get('productName') || document.getElementById('productName').value,
-        reference: formData.get('productReference') || document.getElementById('productReference').value,
-        brand: formData.get('productBrand') || document.getElementById('productBrand').value,
-        quantity: parseInt(formData.get('productQuantity') || document.getElementById('productQuantity').value),
-        price: parseFloat(formData.get('productPrice') || document.getElementById('productPrice').value)
+        name: name,
+        reference: reference,
+        brand: brand,
+        quantity: quantity,
+        price: price
     };
 
     if (editingProductId) {
@@ -332,6 +348,9 @@ function saveProduct(event) {
             
             products[productIndex] = { ...products[productIndex], ...productData };
             showNotification('Producto actualizado exitosamente', 'success');
+        } else {
+            showNotification('Error: Producto no encontrado', 'error');
+            return;
         }
     } else {
         // Add new product
@@ -348,6 +367,7 @@ function saveProduct(event) {
         showNotification('Producto agregado exitosamente', 'success');
     }
     
+    // Save to localStorage and update UI
     saveProducts();
     filteredProducts = [...products];
     renderProducts();
@@ -554,57 +574,7 @@ function showMobileView() {
 // Handle window resize
 window.addEventListener('resize', showMobileView);
 
-// Handle form submission with FormData
-document.getElementById('productForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-    
-    const formData = new FormData(this);
-    const imageFile = document.getElementById('productImage').files[0];
-    
-    const productData = {
-        name: formData.get('productName') || document.getElementById('productName').value,
-        reference: formData.get('productReference') || document.getElementById('productReference').value,
-        brand: formData.get('productBrand') || document.getElementById('productBrand').value,
-        quantity: parseInt(formData.get('productQuantity') || document.getElementById('productQuantity').value),
-        price: parseFloat(formData.get('productPrice') || document.getElementById('productPrice').value)
-    };
-
-    if (editingProductId) {
-        // Update existing product
-        const productIndex = products.findIndex(p => p.id === editingProductId);
-        if (productIndex !== -1) {
-            // Get existing image if no new image selected
-            if (!imageFile && products[productIndex].image) {
-                productData.image = products[productIndex].image;
-            }
-            // Add new image if selected
-            else if (imageFile) {
-                productData.image = URL.createObjectURL(imageFile);
-            }
-            
-            products[productIndex] = { ...products[productIndex], ...productData };
-            showNotification('Producto actualizado exitosamente', 'success');
-        }
-    } else {
-        // Add new product
-        const newProduct = {
-            id: Date.now(),
-            ...productData
-        };
-        
-        if (imageFile) {
-            newProduct.image = URL.createObjectURL(imageFile);
-        }
-        
-        products.push(newProduct);
-        showNotification('Producto agregado exitosamente', 'success');
-    }
-    
-    saveProducts();
-    filteredProducts = [...products];
-    renderProducts();
-    closeModal();
-});
+// Esta función ya no se usa - fue reemplazada por saveProduct() en el onsubmit
 
 // Add sample data for demonstration
 function addSampleData() {
@@ -653,3 +623,9 @@ function addSampleDataButton() {
         showNotification('Ya tienes productos en el inventario', 'error');
     }
 }
+
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // This ensures the event listeners are set up only once
+    console.log('Inventory App initialized');
+});
